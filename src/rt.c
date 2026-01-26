@@ -37,7 +37,7 @@
 #define SSI_SR     (*(volatile uint32_t *)(SSI_BASE + SSI_SR_OFFSET))
 #define SSI_SPI_CTRLR0 (*(volatile uint32_t *)(SSI_BASE + SSI_SPI_CTRLR0_OFFSET))
 
-struct QSPIPadConfig {
+union QSPIPadConfig {
   uint32_t raw;
   struct {
     uint32_t slew_fast : 1;      // Slew rate (1=fast,0=slow)
@@ -51,7 +51,7 @@ struct QSPIPadConfig {
   } bits;
 };
 
-struct QSPI_CTRLR0 {
+union QSPI_CTRLR0 {
   uint32_t raw;
   struct {
     uint32_t dfs : 4;             // Data Frame Size
@@ -70,7 +70,7 @@ struct QSPI_CTRLR0 {
   } bits;
 };
 
-struct SSI_SPI_CTRLR0_s {
+union SSI_SPI_CTRLR0_s {
   uint32_t raw;
   struct {
     uint32_t trans_type : 2;
@@ -103,14 +103,14 @@ __attribute__((section(".boot2"))) void __boot2() {
   PADS_QSPI_VREF = 0x0;
 
   // 1. Configure SCLK (Output only, 8mA, Fast Slew, No Pulls)
-  struct QSPIPadConfig sclk_config = {0};
+  union QSPIPadConfig sclk_config = {0};
   sclk_config.bits.slew_fast = 1;
   sclk_config.bits.drive_strength = 2; // 8mA
-  sclk_config.bits.input_en = 0;
+  sclk_config.bits.input_en = 1;
   PADS_QSPI_SCLK = sclk_config.raw;
 
   // 2. Configure SD0-SD3 (Input/Output, 8mA, Fast Slew, Pull-up, No Schmitt)
-  struct QSPIPadConfig sd_config = {0};
+  union QSPIPadConfig sd_config = {0};
   sd_config.bits.slew_fast = 1;
   sd_config.bits.en_schmitt = 0; // Disable Schmitt for speed
   sd_config.bits.pull_up_en = 1;
@@ -126,9 +126,9 @@ __attribute__((section(".boot2"))) void __boot2() {
   // More details in page 570
   // 2.a) Disable the SSI before configuration
   SSI_ENR   = 0x0; // Disable SSI
-  SSI_BAUDR = 2; // Set clock divisor (clk_sys/2) for higher speed
+  SSI_BAUDR = 4; // Set clock divisor (clk_sys/2) for higher speed
 
-  struct QSPI_CTRLR0 ctrlr0 = {0};
+  union QSPI_CTRLR0 ctrlr0 = {0};
   // All settings from Page 599.
   ctrlr0.bits.frf = 0x2;            // Set to 4-bit QSPI mode
   ctrlr0.bits.data_frame_size = 31; // 32-bit data frames
@@ -136,7 +136,7 @@ __attribute__((section(".boot2"))) void __boot2() {
   SSI_CTRLR0 = ctrlr0.raw;
 
   // Settings from page 606
-  struct SSI_SPI_CTRLR0_s ssi_spi_ctrlr0 = {0};
+  union SSI_SPI_CTRLR0_s ssi_spi_ctrlr0 = {0};
   // TODO: Verify with WinBond Specification.
   ssi_spi_ctrlr0.bits.xip_cmd = 0xEB;  // Quad I/O Fast Read command
   ssi_spi_ctrlr0.bits.inst_l = 2;      // 8-bit instruction
@@ -145,7 +145,8 @@ __attribute__((section(".boot2"))) void __boot2() {
   ssi_spi_ctrlr0.bits.wait_cycles = 4; // 6 wait cycles
 
   SSI_SPI_CTRLR0 = ssi_spi_ctrlr0.raw;
-  
+  SSI_ENR = 0x1;
+
   // Test flash - do a read from address 0x100000
   volatile uint32_t *flash_xip_addr = (uint32_t *)0x10000000;
   uint32_t data = *flash_xip_addr;
