@@ -6,6 +6,8 @@ MEMORY {
     BOOT_RAM(rwx): ORIGIN = 0x20041F00, LENGTH = 256
 }
 
+_estack = ORIGIN(RAM) + LENGTH(RAM);
+
 SECTIONS {
     .boot2 : {
         __boot2_start__ = .;
@@ -19,6 +21,25 @@ SECTIONS {
         KEEP(*(.crc*))
         . = ORIGIN(FLASH) + 256;
     } > FLASH
+
+    .vtor : {
+        . = ORIGIN(FLASH) + 256;
+        . = ALIGN(256);
+        KEEP(*(.vtor*))
+        . = ALIGN(4);
+    } > FLASH
+
+    .text : {
+        KEEP(*(.text*))
+        . = ALIGN(4);
+        KEEP(*(.rodata*))
+        . = ALIGN(4);
+    } > FLASH
+
+    .data : {
+        KEEP(*(.data*))
+        . = ALIGN(4);
+    } > RAM AT > FLASH
 
     ASSERT(SIZEOF(.boot2) + SIZEOF(.crc) == 256, "Error: BL2 should be exactly 256 bytes!")
 }

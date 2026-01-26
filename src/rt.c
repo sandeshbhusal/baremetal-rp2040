@@ -1,6 +1,15 @@
 #include <stdint.h>
 
+extern uintptr_t _estack;
+extern void main();
+
 // Registers
+#define M0_BASE 0xE0000000
+#define VTOR (volatile uint32_t *)(M0_BASE + 0xED08)
+
+#define FLASH_BASE 0x10000000
+#define VTOR_TABLE_ADDR (FLASH_BASE + 0x100)
+
 #define RESETS_BASE 0x4000C000
 #define RESETS_RESET (volatile uint32_t *)(RESETS_BASE + 0x0)
 #define RESETS_RESET_DONE (volatile uint32_t *)(RESETS_BASE + 0x8)
@@ -66,6 +75,29 @@ typedef union {
 } spi_ctrlr0_t;
 
 // ----------------------------------------------------------------------------
+// VTOR Table Decls
+// ----------------------------------------------------------------------------
+void reset_handler() {
+    main();
+    while(1);
+}
+
+extern void nmi_handler() {
+    while(1);
+}
+
+extern void hardfault_handler() {
+    while(1);
+}
+
+const uintptr_t vtor_table[] __attribute__((section(".vtor"), aligned(256))) = {
+    (uintptr_t)(&_estack),
+    (uintptr_t)(reset_handler),
+    (uintptr_t)(nmi_handler),
+    (uintptr_t)(hardfault_handler)
+};
+
+// ----------------------------------------------------------------------------
 // Boot2 Code
 // ----------------------------------------------------------------------------
 
@@ -91,7 +123,7 @@ __attribute__((section(".boot2"))) void __boot2() {
 
     // 4. Perform Dummy Read to enter Continuous Read Mode (0xA0)
     // This tells the flash that subsequent commands won't have an instruction prefix.
-    
+
     // CTRLR0
     ctrlr0_t ctrlr0 = {0};
     ctrlr0.bits.frf = 0; // Motorola SPI
@@ -115,7 +147,7 @@ __attribute__((section(".boot2"))) void __boot2() {
     // Kick off the read
     *SSI_DR0 = 0xEB; // Instruction: Fast Read Quad I/O
     *SSI_DR0 = 0x000000A0; // Address (0) + Mode Bits (0xA0)
-    
+
     // Wait for completion
     while ((*SSI_SR & SSI_SR_BUSY));
 
@@ -136,10 +168,22 @@ __attribute__((section(".boot2"))) void __boot2() {
 
     *SSI_SSIENR = 1; // Enable
 
-    // 6. Access Flash
-    // Bus accesses to 0x1XXXXXXX will now be translated to Quad I/O reads
-    volatile uint32_t *flash = (uint32_t *)0x10000000;
-    (void)*flash; 
-    
+    // At this point, SSI is in XIP mode with Flash configured
+    // for winbond chip on the rp2040. We can proceed with setup.
+
+    // Setup the VTOR register
+    *VTOR = VTOR_TABLE_ADDR;
+
+    uint32_t *vtor_ptr = (uint32_t *)VTOR_TABLE_ADDR;
+    uint32_t stack_end = vtor_ptr[0];
+    uint32_t reset_handler = vtor_ptr[1];
+
+    // Jump to reset handler
+    __asm__ volatile (
+        "msr msp, %0\n\t"
+        "bx %1"
+        : : "r"(stack_end) , "r"(reset_handler) : "memory"
+    );
+
     while(1);
 }
