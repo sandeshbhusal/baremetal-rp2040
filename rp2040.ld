@@ -22,6 +22,8 @@ SECTIONS {
         . = ORIGIN(FLASH) + 256;
     } > FLASH
 
+    ASSERT(SIZEOF(.boot2) + SIZEOF(.crc) == 256, "Error: BL2 should be exactly 256 bytes!")
+
     .vtor : {
         . = ORIGIN(FLASH) + 256;
         . = ALIGN(256);
@@ -37,9 +39,18 @@ SECTIONS {
     } > FLASH
 
     .data : {
+        _data_start = .;
         KEEP(*(.data*))
+        _data_end = .;
         . = ALIGN(4);
     } > RAM AT > FLASH
 
-    ASSERT(SIZEOF(.boot2) + SIZEOF(.crc) == 256, "Error: BL2 should be exactly 256 bytes!")
+    .bss : {
+        _bss_start = .;
+        KEEP(*(.bss*))
+        _bss_end = .;
+        . = ALIGN(4);
+    } > RAM AT > FLASH
+
+    _data_load_addr = LOADADDR(.data);
 }
