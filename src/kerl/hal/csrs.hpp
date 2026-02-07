@@ -45,11 +45,12 @@ struct RegField {
         static_assert(Policy::can_read && Policy::can_write,
                       "Cannot either read/write to this reg");
 
-        auto set_value = read();
+        volatile uintptr_t* reg_addr = (volatile uintptr_t*)(REG_ADDRESS);
+        auto set_value = *reg_addr;
         set_value = set_value & (~(MASK << position));
-        set_value |= (value & (MASK << position));
+        set_value |= ((value & MASK) << position);
 
-        *(volatile uintptr_t*)(REG_ADDRESS) = set_value;
+        *reg_addr = set_value;
     }
 
     /**
@@ -57,7 +58,7 @@ struct RegField {
      */
     static uint32_t read() {
         static_assert(Policy::can_read, "Cannot read this reg");
-        return *((volatile uintptr_t*)(REG_ADDRESS)) & (MASK << position);
+        return (*((volatile uintptr_t*)(REG_ADDRESS)) >> position) & MASK;
     }
 
     /**
