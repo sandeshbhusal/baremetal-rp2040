@@ -1,0 +1,13 @@
+#![no_std]
+#![no_main]
+
+#[panic_handler]
+fn panic(_info: &core::panic::PanicInfo) -> ! {
+    // Maybe turn on the board LED and blink it, etc.
+    loop {}
+}
+
+#[no_mangle]
+pub extern "C" fn _start() -> ! {
+    loop {}
+}

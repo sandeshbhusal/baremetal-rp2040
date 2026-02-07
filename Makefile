@@ -9,11 +9,11 @@ all:
 	python3 calc_crc.py build/rt.bin build/crc.c
 	arm-none-eabi-gcc -c build/crc.c -o build/crc.o -Os -mthumb -mcpu=cortex-m0plus -ffreestanding -nostdlib -g
 
-	# Compile main
-	arm-none-eabi-gcc -c src/main.c -o build/main.o -Os -mthumb -mcpu=cortex-m0plus -ffreestanding -nostdlib -g
+	# Build Rust library
+	cd src/kerl && cargo build --release
 
 	# Generate the final image and map
-	arm-none-eabi-ld build/rt.o build/main.o build/crc.o -o build/image.elf -T rp2040.ld -Map=build/image.map
+	arm-none-eabi-ld build/rt.o build/crc.o src/kerl/target/thumbv6m-none-eabi/release/libkerl.a -o build/image.elf -T rp2040.ld -Map=build/image.map
 	arm-none-eabi-objcopy -O binary build/image.elf build/image.bin
 
 clean:

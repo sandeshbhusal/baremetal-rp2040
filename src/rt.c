@@ -1,7 +1,7 @@
 #include <stdint.h>
 
 extern uintptr_t _estack[];
-extern void main();
+extern void _start();
 
 // Registers
 #define M0_BASE 0xE0000000
@@ -96,7 +96,7 @@ void reset_handler() {
         *data++ = *(uintptr_t*)data_load++;
     }
 
-    main();
+    _start();
     while (1);
 }
 
