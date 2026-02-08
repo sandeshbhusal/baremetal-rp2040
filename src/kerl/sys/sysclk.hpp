@@ -1,9 +1,11 @@
 #pragma once
 
 #include <expected>
+
+#include "../hal/clk.hpp"
 #include "../hal/xosc.hpp"
 
-namespace kerl::sys::sysclk {
+namespace kerl::sys::clk {
 using namespace kerl::hal::csr;
 
 enum class ClkErr : uint8_t {
@@ -36,4 +38,12 @@ inline int init_xosc() {
     return 0;
 }
 
-}  // namespace kerl::sys::sysclk
+inline void move_refclk_to_xosc() {
+    uint32_t xosc = static_cast<uint32_t>(hal::csr::clk::ClkRefSrc::XOSC);
+    hal::csr::clk::RefCtrl::src::rmw(xosc);
+
+    while ((kerl::hal::csr::clk::RefSelected::selected::read() & (1 << xosc)) ==
+           0);
+}
+
+}  // namespace kerl::sys::clk

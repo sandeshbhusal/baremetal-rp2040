@@ -35,7 +35,9 @@ struct AtomicWrite {
 template <typename Policy, std::uintptr_t REG_ADDRESS, unsigned position,
           unsigned width = 1>
 struct RegField {
-    static constexpr unsigned MASK = (1 << width) - 1;
+    static constexpr uintptr_t MASK =
+        (width >= 32) ? 0xFFFFFFFFu : ((1u << width) - 1u);
+
     /**
      * @brief: Read-Modify-Write a register field
      *
