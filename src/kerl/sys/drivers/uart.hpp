@@ -112,21 +112,38 @@ struct PrimeCellUART {
         using OEMIM = RF<RW, (BASE + IMSC_OFFSET), 10, 1>;
     };
 
-    PrimeCellUART(uintptr_t baud_rate) {
-        // Initialize the UART
-        // 1. Bring UART out of reset (not in this ctor, should be done in sysinit)
-        // 2. Turn off the UART before configuraiton
-        // 3. Calculate and set baud rate divisors
-        // 4. Enable Fifos
-        // 5. Enable UART, Tx and Rx
 
-        ControlReg::UartEn::rmw(0);  // Turn off UART before configuration
-        uint32_t baud_rate_divisor = 48000000 / (16 * baud_rate);
-        IntegerBaudReg::DivInt::rmw(baud_rate_divisor);
-        FractionalBaudReg::DivFrac::rmw((baud_rate_divisor - (uint32_t)baud_rate_divisor) * 64);
-        LineCtrlReg::FifoEnable::rmw(1);  // Enable FIFOs
-        ControlReg::UartEn::rmw(1);  // Enable UART
-        ControlReg::TxEn::rmw(1);  // Enable Tx
+    PrimeCellUART(uint32_t baud_rate, uint32_t peri_clk_hz = 100000000) {
+        disable();
+        set_baudrate(baud_rate, peri_clk_hz);
+        LineCtrlReg::WordLength::rmw(0b11);  // 8 data bits
+        enable_fifos();
+        enable();
+        enable_tx_rx();
+    }
+
+    inline void disable() {
+        ControlReg::UartEn::rmw(0);
+    }
+
+    inline void enable() {
+        ControlReg::UartEn::rmw(1);
+    }
+
+    inline void set_baudrate(uint32_t baud_rate, uint32_t peri_clk_hz) {
+        uint32_t ibrd = peri_clk_hz / (16 * baud_rate);
+        uint32_t remainder = peri_clk_hz % (16 * baud_rate);
+        uint32_t fbrd = (remainder * 64 + (16 * baud_rate) / 2) / (16 * baud_rate);
+        IntegerBaudReg::DivInt::rmw(ibrd);
+        FractionalBaudReg::DivFrac::rmw(fbrd);
+    }
+
+    inline void enable_fifos() {
+        LineCtrlReg::FifoEnable::rmw(1);
+    }
+
+    inline void enable_tx_rx() {
+        ControlReg::TxEn::rmw(1);
         ControlReg::RxEn::rmw(1);
     }
 

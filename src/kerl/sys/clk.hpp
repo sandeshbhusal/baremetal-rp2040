@@ -50,6 +50,7 @@ struct Clocks {
     static constexpr uintptr_t REFCTRL_SELECTED_OFFSET = 0x38;
     static constexpr uintptr_t SYSCTRL_OFFSET = 0x3C;
     static constexpr uintptr_t SYSCTRL_SELECTED_OFFSET = 0x44;
+    static constexpr uintptr_t PERI_CTRL_OFFSET = 0x48;
 
     template <typename P, uintptr_t A, unsigned Pos, unsigned W=1>
     using RF = kerl::sys::RegField<P, A, Pos, W>;
@@ -74,8 +75,14 @@ struct Clocks {
         using selected = RF<RO, (BASE + SYSCTRL_SELECTED_OFFSET), 0, 32>;
     };
 
+    struct PeriCtrl {
+        using enable = RF<RW, (BASE + PERI_CTRL_OFFSET), 11>;
+        using auxsrc = RF<RW, (BASE + PERI_CTRL_OFFSET), 5, 3>;
+    };
+
     static void move_refclk_to_xosc();
     static void move_sysclk_to_pll();
+    static void enable_peri_clk();
 };
 
 } // namespace kerl::sys

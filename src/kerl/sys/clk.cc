@@ -39,4 +39,10 @@ void Clocks::move_sysclk_to_pll() {
     while ((SysSelected::selected::read() & (1 << 1)) == 0);
 }
 
+void Clocks::enable_peri_clk() {
+    // 0x0 is clk_sys
+    PeriCtrl::auxsrc::rmw(0);
+    PeriCtrl::enable::rmw(1);
+}
+
 }
