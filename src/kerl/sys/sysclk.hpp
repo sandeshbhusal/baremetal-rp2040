@@ -1,7 +1,5 @@
 #pragma once
 
-#include <expected>
-
 #include "../hal/clk.hpp"
 #include "../hal/xosc.hpp"
 
@@ -22,8 +20,9 @@ enum class ClkErr : uint8_t {
  * 256 cycles per tick, so we program delay to 47 (1ms is 1000 cycles).
  */
 inline int init_xosc() {
-    /* badwrite is wc field */
-    // xosc::Status::bad_write::rmw(1);
+    /* badwrite is wc field, so clear this first. */
+    xosc::Status::bad_write::rmw(1);
+
     xosc::Ctrl::freq_range::rmw(xosc::DEFAULT_FREQ_RANGE);
     xosc::Ctrl::enable::rmw(xosc::ENABLE_MAGIC);
 
@@ -44,6 +43,21 @@ inline void move_refclk_to_xosc() {
 
     while ((kerl::hal::csr::clk::RefSelected::selected::read() & (1 << xosc)) ==
            0);
+}
+
+/**
+* After the XOSC is stable and the PLLs are locked to XOSC, we can switch the system clock to the PLL output.
+*/
+inline void move_sysclk_to_pll() {
+    /** NOTE: Remember to move the Refclk to XOSC first!! */
+    hal::csr::clk::SysCtrl::src::rmw(0); 
+    while ((kerl::hal::csr::clk::SysSelected::selected::read() & (1 << 0)) == 0);
+
+    uint32_t pll_sys_idx = static_cast<uint32_t>(hal::csr::clk::ClkSysSrc::PLL_SYS);
+    hal::csr::clk::SysCtrl::auxsrc::rmw(pll_sys_idx);
+    hal::csr::clk::SysCtrl::src::rmw(1);
+
+    while ((kerl::hal::csr::clk::SysSelected::selected::read() & (1 << 1)) == 0);
 }
 
 }  // namespace kerl::sys::clk

@@ -25,6 +25,8 @@ extern "C" void _start() {
     sys::pll::lock_pll_to_100mhz();
     
     /** Next, initialize the system clock on the PLLs */
+    sys::clk::move_sysclk_to_pll();
+
     /** Next, turn on the board LED to show successful boot! */
     /** Next, print a message to the UART on UART 0 with a banner */
     /** Next, do a i2c read and print the value on the console */

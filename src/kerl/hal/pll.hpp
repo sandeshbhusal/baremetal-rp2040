@@ -23,6 +23,8 @@ struct ControlStatus {
 
 struct PWR {
     using PD = RegField<ReadWrite, (BASE + PWR_OFFSET), 0>;
+    using PostDivPD = RegField<ReadWrite, (BASE + PWR_OFFSET), 3>;
+    using VcoPD = RegField<ReadWrite, (BASE + PWR_OFFSET), 5>;
 };
 
 struct FBDiv {

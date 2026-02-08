@@ -22,10 +22,13 @@ inline void lock_pll_to_100mhz() {
      */
 
     kerl::hal::csr::pll::PWR::PD::rmw(0);  // Turn on PLL
+    kerl::hal::csr::pll::PWR::VcoPD::rmw(0);
 
     /* Wait for lock */
     while (kerl::hal::csr::pll::ControlStatus::Lock::read() == 0) {
     }
+
+    kerl::hal::csr::pll::PWR::PostDivPD::rmw(0);
 }
 
 }  // namespace kerl::sys::pll
