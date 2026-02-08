@@ -12,11 +12,13 @@ constexpr uintptr_t WDSEL = 0x4;
 constexpr uintptr_t RESET_DONE = 0x8;
 
 struct Reset {
+    using PLL_Sys = RegField<ReadWrite, (BASE + RESET_OFFSET), 12>;
     using IO_Bank0 = RegField<ReadWrite, (BASE + RESET_OFFSET), 5>;
     using Pads_Bank0 = RegField<ReadWrite, (BASE + RESET_OFFSET), 8>;
 };
 
 struct ResetDone {
+    using PLL_Sys = RegField<ReadWrite, (BASE + RESET_DONE), 12>;
     using IO_Bank0 = RegField<ReadOnly, (BASE + RESET_DONE), 5>;
     using Pads_Bank0 = RegField<ReadOnly, (BASE + RESET_DONE), 8>;
 };
