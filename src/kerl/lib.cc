@@ -1,35 +1,25 @@
 #include "sys/interrupts.hpp"
 #include "sys/pll.hpp"
 #include "sys/resets.hpp"
-#include "sys/sysclk.hpp"
+#include "sys/clk.hpp"
 
 using namespace kerl;
 
-extern "C" void _start() {
-    sys::interrupts::disable_all_interrupts();
-
-    /** start the crystal oscillator first. */
-    int start_crystal = sys::clk::init_xosc();
+void sysinit() {
+    sys::Interrupts::disable_all();
+    int start_crystal = sys::Xosc::init();
     if (start_crystal != 0) {
-        // Handle error
         while(1);
     }
 
-    /** Next, initialize the refclk to use the crystal oscillator */
-    sys::clk::move_refclk_to_xosc();
+    sys::Clocks::move_refclk_to_xosc();
+    sys::Resets::pll_reset();
+    sys::Pll::lock_pll_to_100mhz();
+    sys::Clocks::move_sysclk_to_pll();
+    sys::Interrupts::enable_all();
+}
 
-    /** Next, bring PLLs out of reset */
-    sys::resets::pll_reset();
-
-    /** Next, initialize the PLLs and lock it onto XOSC */
-    sys::pll::lock_pll_to_100mhz();
-    
-    /** Next, initialize the system clock on the PLLs */
-    sys::clk::move_sysclk_to_pll();
-
-    /** Next, turn on the board LED to show successful boot! */
-    /** Next, print a message to the UART on UART 0 with a banner */
-    /** Next, do a i2c read and print the value on the console */
-
-    while (1);
+extern "C" void _start() {
+    sysinit();
+    while(1);
 }

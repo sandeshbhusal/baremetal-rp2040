@@ -2,6 +2,10 @@ cmake_minimum_required(VERSION "3.30")
 
 add_library(kerl STATIC
 	lib.cc
+	sys/clk.cc
+	sys/pll.cc
+	sys/resets.cc
+	sys/interrupts.cc
 )
 
 target_include_directories(kerl PUBLIC

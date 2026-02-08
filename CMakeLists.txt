@@ -28,6 +28,8 @@ add_compile_options(
     -mcpu=cortex-m0plus
     -ffreestanding
     -nostdlib
+    -fno-exceptions
+    -fno-rtti
     -g
 )
 

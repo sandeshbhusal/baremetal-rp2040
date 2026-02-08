@@ -1,34 +1,43 @@
 #pragma once
+#include <cstdint>
+#include "csr.hpp"
 
-#include "../hal/pll.hpp"
+namespace kerl::sys {
 
-namespace kerl::sys::pll {
+struct Pll {
+    static constexpr uintptr_t BASE = 0x40028000;
+    static constexpr uintptr_t CS_OFFSET = 0x00;
+    static constexpr uintptr_t PWR_OFFSET = 0x04;
+    static constexpr uintptr_t FBDIV_OFFSET = 0x08;
+    static constexpr uintptr_t PRIM_OFFSET = 0x0C;
 
-inline void lock_pll_to_100mhz() {
-    kerl::hal::csr::pll::PWR::PD::rmw(1);  // Turn off PLL before configuration
+    template <typename P, uintptr_t A, unsigned Pos, unsigned W=1>
+    using RF = kerl::sys::RegField<P, A, Pos, W>;
+    using RO = kerl::sys::ReadOnly;
+    using RW = kerl::sys::ReadWrite;
 
-    /* Im going to use a 100 Mhz configuration for the PLL_SYS */
-    kerl::hal::csr::pll::FBDiv::Div::rmw(100);  // Set feedback divider to 100
+    struct ControlStatus {
+        using RefDiv = RF<RW, (BASE + CS_OFFSET), 0, 6>;
+        using Bypass = RF<RW, (BASE + CS_OFFSET), 8>;
+        using Lock = RF<RO, (BASE + CS_OFFSET), 31>;
+    };
 
-    kerl::hal::csr::pll::ControlStatus::RefDiv::rmw(
-        1);  // Set reference divider to 1 (use 12Mhz straight outta the XOSC)
+    struct PWR {
+        using PD = RF<RW, (BASE + PWR_OFFSET), 0>;
+        using PostDivPD = RF<RW, (BASE + PWR_OFFSET), 3>;
+        using VcoPD = RF<RW, (BASE + PWR_OFFSET), 5>;
+    };
 
-    kerl::hal::csr::pll::Prim::PostDiv1::rmw(6);  // Set post divider 1 to 6
-    kerl::hal::csr::pll::Prim::PostDiv2::rmw(2);  // Set post divider 2 to 2
+    struct FBDiv {
+        using Div = RF<RW, (BASE + FBDIV_OFFSET), 0, 12>;
+    };
 
-    /**
-     * At this point, 12 / 1 * 100 / 6 / 2 = 100 Mhz should be the output
-     * frequency of the PLL. Now we can turn on the PLL and wait for it to lock.
-     */
+    struct Prim {
+        using PostDiv1 = RF<RW, (BASE + PRIM_OFFSET), 16, 3>;
+        using PostDiv2 = RF<RW, (BASE + PRIM_OFFSET), 12, 3>;
+    };
 
-    kerl::hal::csr::pll::PWR::PD::rmw(0);  // Turn on PLL
-    kerl::hal::csr::pll::PWR::VcoPD::rmw(0);
+    static void lock_pll_to_100mhz();
+};
 
-    /* Wait for lock */
-    while (kerl::hal::csr::pll::ControlStatus::Lock::read() == 0) {
-    }
-
-    kerl::hal::csr::pll::PWR::PostDivPD::rmw(0);
-}
-
-}  // namespace kerl::sys::pll
+} // namespace kerl::sys
