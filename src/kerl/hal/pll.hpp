@@ -16,7 +16,7 @@ constexpr uintptr_t FBDIV_OFFSET = 0x08;
 constexpr uintptr_t PRIM_OFFSET = 0x0C;
 
 struct ControlStatus {
-    using RefDiv = RegField<ReadWrite, (BASE + CS_OFFSET), 6>;
+    using RefDiv = RegField<ReadWrite, (BASE + CS_OFFSET), 0, 6>;
     using Bypass = RegField<ReadWrite, (BASE + CS_OFFSET), 8>;
     using Lock = RegField<ReadOnly, (BASE + CS_OFFSET), 31>;
 };
@@ -32,8 +32,8 @@ struct FBDiv {
 };
 
 struct Prim {
-    using PostDiv1 = RegField<ReadWrite, (BASE + PRIM_OFFSET), 16, 2>;
-    using PostDiv2 = RegField<ReadWrite, (BASE + PRIM_OFFSET), 12, 2>;
+    using PostDiv1 = RegField<ReadWrite, (BASE + PRIM_OFFSET), 16, 3>;
+    using PostDiv2 = RegField<ReadWrite, (BASE + PRIM_OFFSET), 12, 3>;
 };
 
 }  // namespace kerl::hal::pll

@@ -4,9 +4,9 @@
 
 namespace kerl::sys::resets {
 
-void pll_reset() {
+inline void pll_reset() {
     kerl::hal::csr::resets::Reset::PLL_Sys::rmw(0);
     while (kerl::hal::csr::resets::ResetDone::PLL_Sys::read() != 1);
 }
 
-}  // namespace kerl::sys::resets
+} // namespace kerl::sys::resets
