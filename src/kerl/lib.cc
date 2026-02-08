@@ -1,13 +1,17 @@
-#include "hal/resets.hpp"
+#include "sys/interrupts.hpp"
+#include "sys/sysclk.hpp"
 
-using namespace kerl::hal::csr::resets;
+using namespace kerl;
 
 extern "C" void _start() {
-    Reset::IO_Bank0::rmw(0);
-    Reset::Pads_Bank0::rmw(0);
+    sys::interrupts::disable_all_interrupts();
 
-    while (ResetDone::Pads_Bank0::read() != 1 ||
-           ResetDone::IO_Bank0::read() != 1);
+    /** start the crystal oscillator first. */
+    int start_crystal = sys::sysclk::init_xosc();
+    if (start_crystal != 0) {
+        // Handle error
+        while(1);
+    }
 
     while (1);
 }
