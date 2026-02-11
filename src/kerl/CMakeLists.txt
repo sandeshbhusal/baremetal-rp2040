@@ -17,10 +17,6 @@ add_custom_target(generate_csrs DEPENDS ${CSR_STAMP})
 
 add_library(kerl STATIC
 	lib.cc
-	sys/clk.cc
-	sys/pll.cc
-	sys/resets.cc
-	sys/interrupts.cc
 )
 
 add_dependencies(kerl generate_csrs)

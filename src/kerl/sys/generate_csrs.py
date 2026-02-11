@@ -531,8 +531,10 @@ def generate_hpp(peripheral: Peripheral, csr_include_path: str) -> str:
             for field in reg.fields:
                 lines.extend(format_comment(field.description, indent + indent))
                 width_part = f", {field.width}" if field.width != 1 else ""
+                # Rename field to "RegisterValue" if it has the same name as the register
+                field_cpp_name = "RegisterValue" if field.name == reg.name else field.cpp_name
                 lines.append(
-                    f"{indent}{indent}using {field.cpp_name} = "
+                    f"{indent}{indent}using {field_cpp_name} = "
                     f"RF<{field.policy}, (BASE + {reg.offset_const_name}), "
                     f"{field.position}{width_part}>;"
                 )
