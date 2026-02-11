@@ -30,10 +30,10 @@ struct PrimeCellUART {
     static constexpr uintptr_t PCELLID3_OFFSET = 0xFFC;
 
     template <typename P, uintptr_t A, unsigned Pos, unsigned W=1>
-    using RF = kerl::sys::RegField<P, A, Pos, W>;
-    using RO = kerl::sys::ReadOnly;
-    using RW = kerl::sys::ReadWrite;
-    using WO = kerl::sys::WriteOnly;
+    using RF = kerl::csr::RegField<P, A, Pos, W>;
+    using RO = kerl::csr::ReadOnly;
+    using RW = kerl::csr::ReadWrite;
+    using WO = kerl::csr::WriteOnly;
 
     struct DataReg {
         using Data = RF<RW, (BASE + DR_OFFSET), 0, 8>;

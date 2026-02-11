@@ -1,39 +1,28 @@
 #pragma once
-#include <cstdint>
-#include "csr.hpp"
+#include "csrs/resets.hpp"
 
-namespace kerl::sys {
+namespace kerl::sys::resets {
 
-struct Resets {
-    static constexpr uintptr_t BASE = 0x4000c000;
-    static constexpr uintptr_t RESET_OFFSET = 0x0;
-    static constexpr uintptr_t RESET_DONE = 0x8;
+using csr = kerl::csr::Resets;
 
-    template <typename P, uintptr_t A, unsigned Pos, unsigned W=1>
-    using RF = kerl::sys::RegField<P, A, Pos, W>;
-    using RO = kerl::sys::ReadOnly;
-    using RW = kerl::sys::ReadWrite;
+static void pll_reset() {
+    csr::Reset::PllSys::rmw(0);
+    while (csr::ResetDone::PllSys::read() != 1);
+}
 
-    struct Reset {
-        using PLL_Sys = RF<RW, (BASE + RESET_OFFSET), 12>;
-        using IO_Bank0 = RF<RW, (BASE + RESET_OFFSET), 5>;
-        using Pads_Bank0 = RF<RW, (BASE + RESET_OFFSET), 8>;
-        using Uart0 = RF<RW, (BASE + RESET_OFFSET), 22>;
-        using Uart1 = RF<RW, (BASE + RESET_OFFSET), 23>;
-    };
+static void io_bank0_reset() {
+    csr::Reset::IoBank0::rmw(0);
+    while (csr::ResetDone::IoBank0::read() != 1);
+}
 
-    struct ResetDone {
-        using PLL_Sys = RF<RW, (BASE + RESET_DONE), 12>;
-        using IO_Bank0 = RF<RO, (BASE + RESET_DONE), 5>;
-        using Pads_Bank0 = RF<RO, (BASE + RESET_DONE), 8>;
-        using Uart0 = RF<RO, (BASE + RESET_DONE), 22>;
-        using Uart1 = RF<RO, (BASE + RESET_DONE), 23>;
-    };
+static void pads_bank0_reset() {
+    csr::Reset::PadsBank0::rmw(0);
+    while (csr::ResetDone::PadsBank0::read() != 1);
+}
 
-    static void pll_reset();
-    static void io_bank0_reset();
-    static void pads_bank0_reset();
-    static void uart0_reset();
-};
+static void uart0_reset() {
+    csr::Reset::Uart0::rmw(0);
+    while (csr::ResetDone::Uart0::read() != 1);
+}
 
-} // namespace kerl::sys
+}  // namespace kerl::sys

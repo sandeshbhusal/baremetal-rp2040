@@ -8,32 +8,32 @@
 using namespace kerl;
 
 void sysinit() {
-    sys::Interrupts::disable_all();
-    int start_crystal = sys::Xosc::init();
+    sys::interrupts::disable_all();
+    int start_crystal = sys::xosc::init();
     if (start_crystal != 0) {
         while(1);
     }
 
-    sys::Clocks::move_refclk_to_xosc();
-    sys::Resets::pll_reset();
-    sys::Pll::lock_pll_to_100mhz();
-    sys::Clocks::move_sysclk_to_pll();
-    sys::Clocks::enable_peri_clk();
-    sys::Interrupts::enable_all();
+    sys::clocks::move_refclk_to_xosc();
+    sys::resets::pll_reset();
+    sys::pll::lock_pll_to_100mhz();
+    sys::clocks::move_sysclk_to_pll();
+    sys::clocks::enable_peri_clk();
+    sys::interrupts::enable_all();
 }
 
 extern "C" void _start() {
     using kerl::sys::drivers::PrimeCellUART;
     sysinit();
 
-    sys::Resets::uart0_reset();
+    sys::resets::uart0_reset();
 
     // Mux GPIO0 -> UART0 TX, GPIO1 -> UART0 RX (function 2)
-    sys::Resets::io_bank0_reset();
-    sys::Resets::pads_bank0_reset();
+    sys::resets::io_bank0_reset();
+    sys::resets::pads_bank0_reset();
 
-    sys::IoBank0::Gpio<0>::set_function(kerl::sys::IoBank0::GpioPinFunction::FUNC_UART0);
-    sys::IoBank0::Gpio<1>::set_function(kerl::sys::IoBank0::GpioPinFunction::FUNC_UART0);
+    sys::gpio::Gpio<0>::set_function(sys::gpio::GpioPinFunction::FUNC_UART0);
+    sys::gpio::Gpio<1>::set_function(sys::gpio::GpioPinFunction::FUNC_UART0);
 
     PrimeCellUART<0x40034000> uart0(115200);
     // Poor attempt at CLS

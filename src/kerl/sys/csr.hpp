@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-namespace kerl::sys {
+namespace kerl::csr {
 
 /* Marker types for fields */
 struct ReadOnly {
@@ -80,4 +80,5 @@ struct RegField {
                       "Not atomic/can't clear this reg");
     }
 };
-}  // namespace kerl::sys
+
+}  // namespace kerl::csr

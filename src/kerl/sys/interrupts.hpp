@@ -1,10 +1,8 @@
 #pragma once
 
-namespace kerl::sys {
+namespace kerl::sys::interrupts {
 
-struct Interrupts {
-    static void enable_all();
-    static void disable_all();
-};
+void enable_all() { __asm__ volatile("cpsie i"); }
+void disable_all() { __asm__ volatile("cpsid i"); }
 
 } // namespace kerl::sys
